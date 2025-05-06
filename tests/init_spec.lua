@@ -367,4 +367,30 @@ describe("build_spec", function()
     assert.is.truthy(spec.context.file)
     assert.is.truthy(spec.context.results_path)
   end)
+
+  async.it("allows passing extra args using the neotest extra_args option", function()
+    local positions = plugin.discover_positions("./spec/config/vitest/basic.test.ts"):to_list()
+
+    local tree = Tree.from_list(positions, function(pos)
+      return pos.id
+    end)
+
+    local spec = plugin.build_spec({ tree = tree:children()[1], extra_args = { "-u" } })
+
+    assert.is.truthy(spec)
+    local expected_command = {
+      "vitest",
+      "--config=./spec/config/vitest/vitest.config.ts",
+      "-u",
+      "--watch=false",
+      "--reporter=verbose",
+      "--reporter=json",
+      "--outputFile=/tmp/foo.json",
+      "--testNamePattern=^\\s?1$",
+      -- "spec/config/vitest/basic.test.ts",
+    }
+    assert.is.same(expected_command, vim.list_slice(spec.command, 0, #spec.command - 1))
+    assert.is.truthy(spec.context.file)
+    assert.is.truthy(spec.context.results_path)
+  end)
 end)
